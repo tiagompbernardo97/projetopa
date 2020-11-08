@@ -18,7 +18,7 @@ LDFLAGS=#-pg
 IFLAGS=-linux -brs -brf -br
 
 # Name of the executable
-PROGRAM=prog
+PROGRAM=nanoShell
 
 # Prefix for the gengetopt file (if gengetopt is used)
 PROGRAM_OPT=args
@@ -61,7 +61,7 @@ $(PROGRAM_OPT).o: $(PROGRAM_OPT).c $(PROGRAM_OPT).h
 
 # Generates command line arguments code from gengetopt configuration file
 $(PROGRAM_OPT).c $(PROGRAM_OPT).h: $(PROGRAM_OPT).ggo
-	gengetopt < $(PROGRAM_OPT).ggo --file-name=$(PROGRAM_OPT)
+	gengetopt < $(PROGRAM_OPT).ggo --file-name=$(PROGRAM_OPT) --no-help
 
 clean:
 	rm -f *.o core.* *~ $(PROGRAM) *.bak $(PROGRAM_OPT).h $(PROGRAM_OPT).c
