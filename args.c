@@ -34,11 +34,11 @@ const char *gengetopt_args_info_versiontext = "versiontext needed (optional)";
 const char *gengetopt_args_info_description = "description needed (optional)";
 
 const char *gengetopt_args_info_help[] = {
-  "  -V, --version             Print version and exit",
-  "  -f, --file=dirname        Diretório do ficheiro com comandos para executar",
-  "  -h, --help                Parâmetro help",
-  "  -m, --max=INT             Numero Maximo de execuções de comandos",
-  "  -s, --signalfile=dirname  Ficheiro com signals",
+  "  -V, --version       Print version and exit",
+  "  -f, --file=dirname  file with commands to execute",
+  "  -h, --help          help parameter",
+  "  -m, --max=INT       how many commands you will able to insert before\n                        nanoshell terminate",
+  "  -s, --signalfile    file with possible signals that nanoshel can retrive",
     0
 };
 
@@ -77,8 +77,6 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->file_arg = NULL;
   args_info->file_orig = NULL;
   args_info->max_orig = NULL;
-  args_info->signalfile_arg = NULL;
-  args_info->signalfile_orig = NULL;
   
 }
 
@@ -184,8 +182,6 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->file_arg));
   free_string_field (&(args_info->file_orig));
   free_string_field (&(args_info->max_orig));
-  free_string_field (&(args_info->signalfile_arg));
-  free_string_field (&(args_info->signalfile_orig));
   
   
 
@@ -225,7 +221,7 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
   if (args_info->max_given)
     write_into_file(outfile, "max", args_info->max_orig, 0);
   if (args_info->signalfile_given)
-    write_into_file(outfile, "signalfile", args_info->signalfile_orig, 0);
+    write_into_file(outfile, "signalfile", 0, 0 );
   
 
   i = EXIT_SUCCESS;
@@ -486,11 +482,11 @@ cmdline_parser_internal (
         { "file",	1, NULL, 'f' },
         { "help",	0, NULL, 'h' },
         { "max",	1, NULL, 'm' },
-        { "signalfile",	1, NULL, 's' },
+        { "signalfile",	0, NULL, 's' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "Vf:hm:s:", long_options, &option_index);
+      c = getopt_long (argc, argv, "Vf:hm:s", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -501,7 +497,7 @@ cmdline_parser_internal (
           cmdline_parser_free (&local_args_info);
           exit (EXIT_SUCCESS);
 
-        case 'f':	/* Diretório do ficheiro com comandos para executar.  */
+        case 'f':	/* file with commands to execute.  */
         
         
           if (update_arg( (void *)&(args_info->file_arg), 
@@ -513,7 +509,7 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'h':	/* Parâmetro help.  */
+        case 'h':	/* help parameter.  */
         
         
           if (update_arg( 0 , 
@@ -525,7 +521,7 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'm':	/* Numero Maximo de execuções de comandos.  */
+        case 'm':	/* how many commands you will able to insert before nanoshell terminate.  */
         
         
           if (update_arg( (void *)&(args_info->max_arg), 
@@ -537,12 +533,12 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 's':	/* Ficheiro com signals.  */
+        case 's':	/* file with possible signals that nanoshel can retrive.  */
         
         
-          if (update_arg( (void *)&(args_info->signalfile_arg), 
-               &(args_info->signalfile_orig), &(args_info->signalfile_given),
-              &(local_args_info.signalfile_given), optarg, 0, 0, ARG_STRING,
+          if (update_arg( 0 , 
+               0 , &(args_info->signalfile_given),
+              &(local_args_info.signalfile_given), optarg, 0, 0, ARG_NO,
               check_ambiguity, override, 0, 0,
               "signalfile", 's',
               additional_error))

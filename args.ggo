@@ -14,10 +14,10 @@ versiontext "versiontext needed (optional)"
 #option "num" n "number" int optional
 
 
-option "file" f "Diretório do ficheiro com comandos para executar" string typestr="dirname" optional
-option "help" h "Parâmetro help" optional
-option "max" m "Numero Maximo de execuções de comandos" int optional
-option "signalfile" s "Ficheiro com signals" string typestr="dirname" optional
+option "file" f "file with commands to execute" string typestr="dirname" optional
+option "help" h "help parameter" optional
+option "max" m "how many commands you will able to insert before nanoshell terminate" int optional
+option "signalfile" s "file with possible signals that nanoshel can retrive" optional
 
 
 #

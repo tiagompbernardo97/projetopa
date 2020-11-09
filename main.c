@@ -8,17 +8,45 @@
 #include <sys/types.h>
 
 #include "cmdline.h"
+#include "debug.h"
+#include "errno.h"
 
 #define PRMTSIZ 255
 #define MAXARGS 63
 #define EXIT_COMMAND "bye"
+
+void trata_sinal(int signal);
+int continua = 1;
+
+/* Rotina de tratamento de sinais*/
+void trata_sinal(int signal)
+{
+	int aux;
+	/* Cópia da variável global errno */
+	aux = errno;
+	if (signal == SIGUSR1)
+	{
+		printf("\nRecebi o sinal SIGUSR1 (%d)\n", signal);
+	}
+	else if (signal == SIGUSR2)
+	{
+		printf("\nRecebi o sinal SIGUSR2 (%d)\n", signal);
+	}
+	else if (signal == SIGINT)
+	{
+		pid_t ppid = getppid();
+		continua = 0;
+		printf("\nRecebi o sinal SIGINT dado pelo meu parrent process with the PID:(%d)\n", ppid);
+	}
+	/* Restaura valor da variável global errno */
+	errno = aux;
+}
 
 int normal_use()
 {
 jump:
 	for (;;)
 	{
-
 		char input[PRMTSIZ + 1] = {0x0};
 		char *ptr = input;
 		char *args[MAXARGS + 1] = {NULL};
@@ -32,12 +60,12 @@ jump:
 			continue;
 
 		// convert input line to list of arguments
-		for (int i = 0; i < sizeof(args) && *ptr; ptr++)
+		for (int i = 0; (unsigned)i < sizeof(args) && *ptr; ptr++)
 		{
 			if (*ptr == '|' || *ptr == '"' || *ptr == '\'')
 			{
 				printf("[ERROR] Wrong request '");
-				for (int c = 0; c < sizeof(input); c++)
+				for (int c = 0; (unsigned)c < sizeof(input); c++)
 				{
 					printf("%c", input[c]);
 				}
@@ -73,10 +101,11 @@ jump:
 		{
 			printf("<%d>", WEXITSTATUS(wstatus));
 		} */
+		//pause();
 	}
 }
 
-int normal_use1()
+/* int normal_use1()
 {
 jump:
 	for (;;)
@@ -88,6 +117,7 @@ jump:
 		int wstatus;
 
 		printf("nanoShell$");
+
 		fgets(input, PRMTSIZ, stdin);
 
 		// ignore empty input
@@ -110,11 +140,11 @@ jump:
 			if (*ptr == ' ')
 				continue;
 
-			/* switch (switch_on) // > >> 2> 2>>
+			switch (switch_on) // > >> 2> 2>>
 			{
 			default:
 				break;
-			} */
+			} 
 
 			if (*ptr == '\n')
 				break;
@@ -144,7 +174,7 @@ jump:
 			printf("<%d>", WEXITSTATUS(wstatus));
 		}
 	}
-}
+} */
 
 const char *myName()
 {
@@ -163,13 +193,13 @@ int execute_a_command(char command[])
 	strcpy(input, command);
 
 	// convert input line to list of arguments
-	for (int i = 0; i < sizeof(args) && *ptr; ptr++)
+	for (int i = 0; (unsigned)i < sizeof(args) && *ptr; ptr++)
 	{
 		if (*ptr == '|' || *ptr == '"' || *ptr == '\'')
 		{
 			printf("[ERROR] Wrong request '%s'\n", command);
 
-			return NULL;
+			return 0;
 		}
 		if (*ptr == ' ')
 			continue;
@@ -225,12 +255,12 @@ jump:
 			continue;
 
 		// convert input line to list of arguments
-		for (int i = 0; i < sizeof(args) && *ptr; ptr++)
+		for (int i = 0; (unsigned)i < sizeof(args) && *ptr; ptr++)
 		{
 			if (*ptr == '|' || *ptr == '"' || *ptr == '\'')
 			{
 				printf("[ERROR] Wrong request ' ");
-				for (int c = 0; c < sizeof(input); c++)
+				for (int c = 0; (unsigned)c < sizeof(input); c++)
 				{
 					printf("%c '", input[c]);
 				}
@@ -272,17 +302,16 @@ jump:
 int main(int argc, char **argv)
 {
 	struct gengetopt_args_info args_info;
+
 	if (cmdline_parser(argc, argv, &args_info) != 0)
 	{
 		exit(1);
-	};
+	}
 
 	if (args_info.file_given)
 	{
 
-		char c;
 		char line[PRMTSIZ] = {0};
-		char line2[PRMTSIZ] = {0};
 		unsigned int line_count = 0;
 
 		printf("-f / --ficheiro com o argumento : %s \n", args_info.file_arg);
@@ -310,7 +339,6 @@ int main(int argc, char **argv)
 					/* strncpy(line2, line,strlen(line)-1);
 					printf("COMANDO ANTES DE EXECUTAR - %s\n", line2); */
 					execute_a_command(line);
-					
 				}
 			}
 		}
@@ -348,7 +376,8 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	if (args_info.signalfile_given) //falta mudar o tipo do ggo para char 
+	if (args_info.signalfile_given)
+
 	{
 		FILE *fptr1;
 		pid_t pid = getpid();
@@ -362,10 +391,27 @@ int main(int argc, char **argv)
 		}
 
 		fprintf(fptr1, "kill -SIGINT %d\nkill -SIGUSR1 %d\nkill -SIGUSR2 %d\n", pid, pid, pid);
-		
+
 		fclose(fptr1);
 		normal_use();
 		exit(1);
 	}
+
+	struct sigaction act;
+	act.sa_handler = trata_sinal;
+	act.sa_flags = 0;
+
+	sigemptyset(&act.sa_mask);
+
+	if (sigaction(SIGINT, &act, NULL) < 0)
+	{
+		ERROR(2, "sigaction - SIGINT");
+	}
+
+	/* while (continua)
+	{
+		pause();  Espera bloqueante 
+	} */
+	
 	normal_use();
 }

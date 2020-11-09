@@ -38,16 +38,14 @@ extern "C" {
 struct gengetopt_args_info
 {
   const char *version_help; /**< @brief Print version and exit help description.  */
-  char * file_arg;	/**< @brief Diretório do ficheiro com comandos para executar.  */
-  char * file_orig;	/**< @brief Diretório do ficheiro com comandos para executar original value given at command line.  */
-  const char *file_help; /**< @brief Diretório do ficheiro com comandos para executar help description.  */
-  const char *help_help; /**< @brief Parâmetro help help description.  */
-  int max_arg;	/**< @brief Numero Maximo de execuções de comandos.  */
-  char * max_orig;	/**< @brief Numero Maximo de execuções de comandos original value given at command line.  */
-  const char *max_help; /**< @brief Numero Maximo de execuções de comandos help description.  */
-  char * signalfile_arg;	/**< @brief Ficheiro com signals.  */
-  char * signalfile_orig;	/**< @brief Ficheiro com signals original value given at command line.  */
-  const char *signalfile_help; /**< @brief Ficheiro com signals help description.  */
+  char * file_arg;	/**< @brief file with commands to execute.  */
+  char * file_orig;	/**< @brief file with commands to execute original value given at command line.  */
+  const char *file_help; /**< @brief file with commands to execute help description.  */
+  const char *help_help; /**< @brief help parameter help description.  */
+  int max_arg;	/**< @brief how many commands you will able to insert before nanoshell terminate.  */
+  char * max_orig;	/**< @brief how many commands you will able to insert before nanoshell terminate original value given at command line.  */
+  const char *max_help; /**< @brief how many commands you will able to insert before nanoshell terminate help description.  */
+  const char *signalfile_help; /**< @brief file with possible signals that nanoshel can retrive help description.  */
   
   unsigned int version_given ;	/**< @brief Whether version was given.  */
   unsigned int file_given ;	/**< @brief Whether file was given.  */
