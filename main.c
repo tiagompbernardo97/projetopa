@@ -8,7 +8,8 @@
 
 FILE *fptr;
 
-void abrirFicheiro(const char *filename)
+
+/* void abrirFicheiro(const char *filename)
 {
 
 	if ((fptr = fopen(filename, "r")) == NULL)
@@ -19,9 +20,9 @@ void abrirFicheiro(const char *filename)
 	}
 
 	return 0;
-}
+} */
 
-void listarLinhasDoFicheiro()
+/* void listarLinhasDoFicheiro()
 {
 	int MAX = 100;
 	char c;
@@ -29,12 +30,12 @@ void listarLinhasDoFicheiro()
 	int linha = 1;
 	char str[MAX];
 
-	/*while (c != EOF) 
+	while (c != EOF) //ATENÇÂO
     { 
 		
         printf ("%c", c); 
         c = fgetc(fptr); 
-    } */
+    } 
 
 	while (fgets(str, MAX, fptr) != NULL)
 	{
@@ -44,18 +45,72 @@ void listarLinhasDoFicheiro()
 	if (!feof(fptr))
 		printf("Erro de leitura\n");
 }
+ */
 
-void argumentoHelp(void)
+void read_command(char cmd[], char *par[])
+{
+	char line[1024];
+	int count = 0, i = 0, j = 0;
+	char *array[100], *pch;
+	char s[2] = " ";
+
+	//Read one line
+	for (;;)
+	{
+		int c = fgetc(stdin);
+		line[count++] = (char)c;
+		
+
+		if (c == '|' || c == '"' || c == '\39')
+		{
+			printf("[ERROR] Wrong request '%s'\n", cmd);
+			exit(1);
+		}
+		if (c == '\n')
+		{
+			break;
+		}
+	}
+
+	if (count == 1)
+	{
+		return;
+	}
+
+	pch = strtok(line, s); //line = "ls -a" 
+
+	//parse the line into words
+	while (pch != NULL)
+	{
+		array[i++] = strdup(pch);
+		pch = strtok(NULL, s);
+	}
+
+	//first word is the command
+	strcpy(cmd, array[0]);
+
+	//other are parametrers
+	for (j = 0; j < i; j++)
+	{
+		par[j] = array[j];
+		
+	}
+	par[i] = NULL;
+
+	
+}
+
+/* void argumentoHelp(void)
 {
 	printf("TEXTO-----------------------");
 	terminarNanosheel();
-}
+} */
 
-void terminarNanosheel(void)
+/* void terminarNanosheel(void)
 {
-}
+} */
 
-void executarComando(char **parsed)
+/* void executarComando(char **parsed)
 {
 	// Forking a child
 	pid_t pid = fork();
@@ -95,10 +150,27 @@ const char *receberComandos(void)
 
 	//printf("[INFO] bye command detected. Terminating nanoShell\n");
 	return comando;
+} */
+
+void type_prompt()
+{
+	static int first_time = 1;
+	if (first_time)
+	{ //clear screan
+		const char *CLEAR_SCREEM_ANSI = "\e[1;1H\e[2J";
+		write(STDOUT_FILENO, CLEAR_SCREEM_ANSI, 12);
+		first_time = 0;
+	}
+
+	printf("nanoShell#"); //display prompt
 }
 
 int main(int argc, char **argv)
 {
+
+	char cmd[100], command[100], *parameters[20];
+	// environment variable
+	char *envp[] = {(char *)"PATH=/bin", 0};
 
 	struct gengetopt_args_info args_info;
 	if (cmdline_parser(argc, argv, &args_info) != 0)
@@ -106,7 +178,7 @@ int main(int argc, char **argv)
 		exit(1);
 	};
 
-	if (args_info.file_given)
+	/* if (args_info.file_given)
 	{
 
 		printf("-f / --ficheiro com o argumento : %s \n", args_info.file_arg);
@@ -115,14 +187,46 @@ int main(int argc, char **argv)
 		listarLinhasDoFicheiro(args_info.file_arg);
 		fclose(fptr);
 	}
-
+ */
 	if (args_info.help_given)
 	{
-		printf("Lista de autores: \n Nuno Ferreira - 2160856 \n Tiago Bernardo - 2160874 \n");
+		printf("NanoShell is a bash that can run:\n ");
+		printf("-f --file <fileName> - Execute the command lines on the text file <fileName>, ignoring blank spaces and the character '#'.\n");
+		printf("-h --help - Gives an explanation of how the ÑanoShell works.\n");
+		printf("-m --max <int> - Gives the max number of command executions the NanoShell can run.\n");
+		printf("-s --signalfile - Creates a signal.txt file with commands to have the possibility to send signals to NanoShell.\n");
+		printf("NanoShell doesn't support the characters '|' or ' "
+			   " '.\n");
+		printf("Project designers: \n Nuno Ferreira - 2160856 \n Tiago Bernardo - 2160874 \n");
+		exit(1);
 	}
 
-	const char *comandoPorExecutar = receberComandos();
-	printf(" DENTRO DO MAIN : %s", &comandoPorExecutar);
+	while (1)
+	{
+		type_prompt();
+		read_command(command, parameters);
+
+		if (fork() != 0)
+		{
+			wait(NULL);
+		}
+
+		else if (strcmp(command, "bye") == 0)
+		{
+			break;
+		}
+
+		else
+		{
+			strcpy(cmd, "/bin/"); // "bin" + cmd eg cmd = /bin/
+			strcat(cmd, command); // cmd + command eg cmd = /bin/ls
+
+			execve(cmd, parameters, envp); // execute command  int execve(const char *pathname, char *const argv[],char *const envp[]);
+		}
+	}
+
+	//const char *comandoPorExecutar = receberComandos();
+	//printf(" DENTRO DO MAIN : %s", &comandoPorExecutar);
 	//executarComando(comandoPorExecutar);
 	/*printf("Hello World - %d", argc);
 	for (int i = 0; i < argc; i++)
