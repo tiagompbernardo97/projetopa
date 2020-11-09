@@ -18,16 +18,81 @@
 } */
 int normal_use()
 {
-	jump:
+jump:
 	for (;;)
 	{
-		
+
 		char input[PRMTSIZ + 1] = {0x0};
 		char *ptr = input;
 		char *args[MAXARGS + 1] = {NULL};
 		int wstatus;
 
-	
+		printf("nanoShell$");
+		fgets(input, PRMTSIZ, stdin);
+
+		// ignore empty input
+		if (*ptr == '\n')
+			continue;
+
+		// convert input line to list of arguments
+		for (int i = 0; i < sizeof(args) && *ptr; ptr++)
+		{
+			if (*ptr == '|' || *ptr == '"' || *ptr == '\'')
+			{
+				printf("[ERROR] Wrong request '");
+				for (int c = 0; c < sizeof(input); c++)
+				{
+					printf("%c", input[c]);
+					
+				}
+
+				goto jump;
+			}
+			if (*ptr == ' ')
+				continue;
+			if (*ptr == '\n')
+				break;
+
+			for (args[i++] = ptr; *ptr && *ptr != ' ' && *ptr != '\n'; ptr++)
+				;
+			*ptr = '\0';
+		}
+
+		// built-in: exit
+		if (strcmp(EXIT_COMMAND, args[0]) == 0)
+		{
+			printf("[INFO] bye command detected. Terminating nanoShell\n");
+			return 0;
+		}
+
+		// fork child and execute program
+		signal(SIGINT, SIG_DFL);
+		if (fork() == 0)
+			exit(execvp(args[0], args));
+		signal(SIGINT, SIG_IGN);
+
+		// wait for program to finish and print exit status
+		wait(&wstatus);
+		if (WIFEXITED(wstatus))
+		{
+			printf("<%d>", WEXITSTATUS(wstatus));
+		}
+	}
+}
+
+int normal_use_with_max_executions(int n_executions)
+{
+jump:
+	for (int a = 1; a <= n_executions; a++)
+	{
+
+		char input[PRMTSIZ + 1] = {0x0};
+		char *ptr = input;
+		char *args[MAXARGS + 1] = {NULL};
+		int wstatus;
+
+		printf("Numero de execuções: %d\n", n_executions);
+		printf("%d / %d - ", a, n_executions);
 
 		printf("nanoShell$");
 		fgets(input, PRMTSIZ, stdin);
@@ -115,5 +180,21 @@ int main(int argc, char **argv)
 		printf("Project designers: \n Nuno Ferreira - 2160856 \n Tiago Bernardo - 2160874 \n");
 		return 0;
 	}
+
+	if (args_info.max_given)
+	{
+		//check if max given is a positive int
+		printf("NUMBER OF TRIES: %d\n", args_info.max_arg);
+		if (args_info.max_arg > 0)
+		{
+			
+			normal_use_with_max_executions(args_info.max_arg);
+			return 0;
+		}
+		else
+			printf("You entered a negative number or zero\n.");
+		return 0;
+	}
+
 	normal_use();
 }
