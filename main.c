@@ -1,112 +1,99 @@
-#include <sys/wait.h>
-#include <sys/types.h>
 #include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <sys/wait.h>
 #include "cmdline.h"
 
-FILE *fptr;
+#define PRMTSIZ 255
+#define MAXARGS 63
+#define EXIT_COMMAND "bye"
 
-void abrirFicheiro(const char *filename)
+/* const char* prompt()
 {
-
-	if ((fptr = fopen(filename, "r")) == NULL)
+	// prompt
+	printf("nanoShell$");
+	fgets(input, PRMTSIZ, stdin);
+	return input;
+} */
+int normal_use()
+{
+	jump:
+	for (;;)
 	{
-		printf("Erro ao abrir ficheiro!\n");
-		// Program exits if file pointer returns NULL.
-		exit(1);
-	}
-
-	return 0;
-}
-
-void listarLinhasDoFicheiro()
-{
-	int MAX = 100;
-	char c;
-	c = fgetc(fptr);
-	int linha = 1;
-	char str[MAX];
-
-	/*while (c != EOF) 
-    { 
 		
-        printf ("%c", c); 
-        c = fgetc(fptr); 
-    } */
+		char input[PRMTSIZ + 1] = {0x0};
+		char *ptr = input;
+		char *args[MAXARGS + 1] = {NULL};
+		int wstatus;
 
-	while (fgets(str, MAX, fptr) != NULL)
-	{
-		printf("Linha %d: %s", linha, str);
-		linha++;
-	}
-	if (!feof(fptr))
-		printf("Erro de leitura\n");
-}
+	
 
-void argumentoHelp(void)
-{
-	printf("TEXTO-----------------------");
-	terminarNanosheel();
-}
+		printf("nanoShell$");
+		fgets(input, PRMTSIZ, stdin);
 
-void terminarNanosheel(void)
-{
-}
+		// ignore empty input
+		if (*ptr == '\n')
+			continue;
 
-void executarComando(char **parsed)
-{
-	// Forking a child
-	pid_t pid = fork();
-
-	if (pid == -1)
-	{
-		printf("\nFailed forking child..");
-		return;
-	}
-	else if (pid == 0)
-	{
-		if (execvp(parsed[0], parsed) < 0)
+		// convert input line to list of arguments
+		for (int i = 0; i < sizeof(args) && *ptr; ptr++)
 		{
-			printf("\nCould not execute command..");
+			if (*ptr == '|' || *ptr == '"' || *ptr == '\'')
+			{
+				printf("[ERROR] Wrong request '");
+				for (int c = 0; c < sizeof(input); c++)
+				{
+					printf("%c", input[c]);
+					/* if ((c - 1) = sizeof(input))
+					{
+						printf("'");
+					} */
+				}
+
+				goto jump;
+			}
+			if (*ptr == ' ')
+				continue;
+			if (*ptr == '\n')
+				break;
+
+			for (args[i++] = ptr; *ptr && *ptr != ' ' && *ptr != '\n'; ptr++)
+				;
+			*ptr = '\0';
 		}
-		exit(0);
+
+		// built-in: exit
+		if (strcmp(EXIT_COMMAND, args[0]) == 0)
+		{
+			printf("[INFO] bye command detected. Terminating nanoShell\n");
+			return 0;
+		}
+
+		// fork child and execute program
+		signal(SIGINT, SIG_DFL);
+		if (fork() == 0)
+			exit(execvp(args[0], args));
+		signal(SIGINT, SIG_IGN);
+
+		// wait for program to finish and print exit status
+		wait(&wstatus);
+		if (WIFEXITED(wstatus))
+		{
+			printf("<%d>", WEXITSTATUS(wstatus));
+		}
 	}
-	else
-	{
-		// waiting for child to terminate
-		wait(NULL);
-		return;
-	}
-}
-
-const char *receberComandos(void)
-{
-	char comando[20];
-
-	printf("nanoShell$ ");
-	gets(comando);
-	//scanf("%s", &comando);
-	//printf("%s\n", &comando);
-	//if (strcmp(comando,"bye"));
-
-	//while (strcmp(comando, "bye"));
-
-	//printf("[INFO] bye command detected. Terminating nanoShell\n");
-	return comando;
 }
 
 int main(int argc, char **argv)
 {
-
 	struct gengetopt_args_info args_info;
 	if (cmdline_parser(argc, argv, &args_info) != 0)
 	{
 		exit(1);
 	};
 
-	if (args_info.file_given)
+	/* if (args_info.file_given)
 	{
 
 		printf("-f / --ficheiro com o argumento : %s \n", args_info.file_arg);
@@ -115,24 +102,18 @@ int main(int argc, char **argv)
 		listarLinhasDoFicheiro(args_info.file_arg);
 		fclose(fptr);
 	}
-
+ */
 	if (args_info.help_given)
 	{
-		printf("Lista de autores: \n Nuno Ferreira - 2160856 \n Tiago Bernardo - 2160874 \n");
+		printf("NanoShell is a bash that can run:\n ");
+		printf("-f --file <fileName> - Execute the command lines on the text file <fileName>, ignoring blank spaces and the character '#'.\n");
+		printf("-h --help - Gives an explanation of how the ÑanoShell works.\n");
+		printf("-m --max <int> - Gives the max number of command executions the NanoShell can run.\n");
+		printf("-s --signalfile - Creates a signal.txt file with commands to have the possibility to send signals to NanoShell.\n");
+		printf("NanoShell doesn't support the characters '|' or ' "
+			   " '.\n");
+		printf("Project designers: \n Nuno Ferreira - 2160856 \n Tiago Bernardo - 2160874 \n");
+		return 0;
 	}
-
-	const char *comandoPorExecutar = receberComandos();
-	printf(" DENTRO DO MAIN : %s", &comandoPorExecutar);
-	//executarComando(comandoPorExecutar);
-	/*printf("Hello World - %d", argc);
-	for (int i = 0; i < argc; i++)
-	{
-		printf(" \n arg %d - %s\n", i, argv[i]);
-	}
-
-	if (!strcmp(argv[1],"-f") ){
-		printf("\nAbrindo ficheiro...");
-
-
-	}*/
+	normal_use();
 }
