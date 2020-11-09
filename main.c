@@ -3,19 +3,15 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <signal.h>
+#include <unistd.h>
+#include <sys/types.h>
+
 #include "cmdline.h"
 
 #define PRMTSIZ 255
 #define MAXARGS 63
 #define EXIT_COMMAND "bye"
-
-/* const char* prompt()
-{
-	// prompt
-	printf("nanoShell$");
-	fgets(input, PRMTSIZ, stdin);
-	return input;
-} */
 
 int normal_use()
 {
@@ -73,10 +69,10 @@ jump:
 
 		// wait for program to finish and print exit status
 		wait(&wstatus);
-		if (WIFEXITED(wstatus))
+		/* if (WIFEXITED(wstatus))
 		{
 			printf("<%d>", WEXITSTATUS(wstatus));
-		}
+		} */
 	}
 }
 
@@ -150,6 +146,11 @@ jump:
 	}
 }
 
+const char *myName()
+{
+	return "Flavio";
+}
+
 int execute_a_command(char command[])
 {
 
@@ -157,12 +158,9 @@ int execute_a_command(char command[])
 	char *ptr = input;
 	char *args[MAXARGS + 1] = {NULL};
 	int wstatus;
-	char char_array[4] = {'>', ">>", "2>", "2>>"};
+	//char char_array[4] = {'>', ">>", "2>", "2>>"};
 
 	strcpy(input, command);
-
-	/* printf(" nanoShell$");
-	fgets(input, PRMTSIZ, stdin); */
 
 	// convert input line to list of arguments
 	for (int i = 0; i < sizeof(args) && *ptr; ptr++)
@@ -198,16 +196,11 @@ int execute_a_command(char command[])
 
 	// wait for program to finish and print exit status
 	wait(&wstatus);
-	if (WIFEXITED(wstatus))
+	/* if (WIFEXITED(wstatus))
 	{
-		/* for (int z = 0; z < 4; z++)
-		{
-			if(strchr(args[0], char_array[z])){
 
-			}
-		} */
 		printf("<%d>", WEXITSTATUS(wstatus));
-	}
+	} */
 }
 
 int normal_use_with_max_executions(int n_executions)
@@ -317,6 +310,7 @@ int main(int argc, char **argv)
 					/* strncpy(line2, line,strlen(line)-1);
 					printf("COMANDO ANTES DE EXECUTAR - %s\n", line2); */
 					execute_a_command(line);
+					
 				}
 			}
 		}
@@ -339,6 +333,7 @@ int main(int argc, char **argv)
 	}
 
 	if (args_info.max_given)
+
 	{
 		//check if max given is a positive int
 		printf("NUMBER OF TRIES: %d\n", args_info.max_arg);
@@ -353,5 +348,24 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
+	if (args_info.signalfile_given) //falta mudar o tipo do ggo para char 
+	{
+		FILE *fptr1;
+		pid_t pid = getpid();
+
+		fptr1 = fopen("signal.txt", "w");
+
+		if (fptr1 == NULL)
+		{
+			printf("Error!");
+			exit(1);
+		}
+
+		fprintf(fptr1, "kill -SIGINT %d\nkill -SIGUSR1 %d\nkill -SIGUSR2 %d\n", pid, pid, pid);
+		
+		fclose(fptr1);
+		normal_use();
+		exit(1);
+	}
 	normal_use();
 }

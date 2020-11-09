@@ -4,6 +4,7 @@ ls -a
 pwd
 ps ax | wc -l
 ls "a.txt"
+bye
   ps ax | wc -l
 whoami
 date 
