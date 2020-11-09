@@ -46,7 +46,7 @@ jump:
 					
 				}
 
-				goto jump;
+				goto jump;//go back to the beginning
 			}
 			if (*ptr == ' ')
 				continue;
@@ -91,10 +91,10 @@ jump:
 		char *args[MAXARGS + 1] = {NULL};
 		int wstatus;
 
-		printf("Numero de execuções: %d\n", n_executions);
+		printf("Max number of executions: %d\n", n_executions);
 		printf("%d / %d - ", a, n_executions);
 
-		printf("nanoShell$");
+		printf(" nanoShell$");
 		fgets(input, PRMTSIZ, stdin);
 
 		// ignore empty input
@@ -106,14 +106,10 @@ jump:
 		{
 			if (*ptr == '|' || *ptr == '"' || *ptr == '\'')
 			{
-				printf("[ERROR] Wrong request '");
+				printf("[ERROR] Wrong request ' ");
 				for (int c = 0; c < sizeof(input); c++)
 				{
-					printf("%c", input[c]);
-					/* if ((c - 1) = sizeof(input))
-					{
-						printf("'");
-					} */
+					printf("%c '", input[c]);
 				}
 
 				goto jump;
@@ -158,7 +154,7 @@ int main(int argc, char **argv)
 		exit(1);
 	};
 
-	/* if (args_info.file_given)
+	if (args_info.file_given)
 	{
 
 		printf("-f / --ficheiro com o argumento : %s \n", args_info.file_arg);
@@ -167,7 +163,7 @@ int main(int argc, char **argv)
 		listarLinhasDoFicheiro(args_info.file_arg);
 		fclose(fptr);
 	}
- */
+ 
 	if (args_info.help_given)
 	{
 		printf("NanoShell is a bash that can run:\n ");
