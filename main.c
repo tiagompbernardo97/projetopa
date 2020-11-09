@@ -16,6 +16,7 @@
 	fgets(input, PRMTSIZ, stdin);
 	return input;
 } */
+
 int normal_use()
 {
 jump:
@@ -43,10 +44,9 @@ jump:
 				for (int c = 0; c < sizeof(input); c++)
 				{
 					printf("%c", input[c]);
-					
 				}
 
-				goto jump;//go back to the beginning
+				goto jump; //go back to the beginning
 			}
 			if (*ptr == ' ')
 				continue;
@@ -77,6 +77,136 @@ jump:
 		{
 			printf("<%d>", WEXITSTATUS(wstatus));
 		}
+	}
+}
+
+int normal_use1()
+{
+jump:
+	for (;;)
+	{
+
+		char input[PRMTSIZ + 1] = {0x0}; //ls -a > resultado.txt
+		char *ptr = input;
+		char *args[MAXARGS + 1] = {NULL};
+		int wstatus;
+
+		printf("nanoShell$");
+		fgets(input, PRMTSIZ, stdin);
+
+		// ignore empty input
+		if (*ptr == '\n')
+			continue;
+
+		// convert input line to list of arguments
+		for (int i = 0; i < sizeof(args) && *ptr; ptr++)
+		{
+			if (*ptr == '|' || *ptr == '"' || *ptr == '\'')
+			{
+				printf("[ERROR] Wrong request '");
+				for (int c = 0; c < sizeof(input); c++)
+				{
+					printf("%c", input[c]);
+				}
+
+				goto jump; //go back to the beginning
+			}
+			if (*ptr == ' ')
+				continue;
+
+			switch (switch_on) // > >> 2> 2>>
+			{
+			default:
+				break;
+			}
+
+			if (*ptr == '\n')
+				break;
+
+			for (args[i++] = ptr; *ptr && *ptr != ' ' && *ptr != '\n'; ptr++)
+				;
+			*ptr = '\0';
+		}
+
+		// built-in: exit
+		if (strcmp(EXIT_COMMAND, args[0]) == 0)
+		{
+			printf("[INFO] bye command detected. Terminating nanoShell\n");
+			return 0;
+		}
+
+		// fork child and execute program
+		signal(SIGINT, SIG_DFL);
+		if (fork() == 0)
+			exit(execvp(args[0], args));
+		signal(SIGINT, SIG_IGN);
+
+		// wait for program to finish and print exit status
+		wait(&wstatus);
+		if (WIFEXITED(wstatus))
+		{
+			printf("<%d>", WEXITSTATUS(wstatus));
+		}
+	}
+}
+
+int execute_a_command(char command[])
+{
+
+	char input[PRMTSIZ + 1] = {0x0};
+	char *ptr = input;
+	char *args[MAXARGS + 1] = {NULL};
+	int wstatus;
+	char char_array[4] = {'>', ">>", "2>", "2>>"};
+
+	strcpy(input, command);
+
+	/* printf(" nanoShell$");
+	fgets(input, PRMTSIZ, stdin); */
+
+	// convert input line to list of arguments
+	for (int i = 0; i < sizeof(args) && *ptr; ptr++)
+	{
+		if (*ptr == '|' || *ptr == '"' || *ptr == '\'')
+		{
+			printf("[ERROR] Wrong request '%s'\n", command);
+
+			return NULL;
+		}
+		if (*ptr == ' ')
+			continue;
+		if (*ptr == '\n')
+			break;
+
+		for (args[i++] = ptr; *ptr && *ptr != ' ' && *ptr != '\n'; ptr++)
+			;
+		*ptr = '\0';
+	}
+
+	// built-in: exit
+	if (strcmp(EXIT_COMMAND, args[0]) == 0)
+	{
+		printf("[INFO] bye command detected. Terminating nanoShell\n");
+		return 0;
+	}
+
+	// fork child and execute program
+	signal(SIGINT, SIG_DFL);
+	if (fork() == 0)
+		exit(execvp(args[0], args));
+	signal(SIGINT, SIG_IGN);
+
+	// wait for program to finish and print exit status
+	wait(&wstatus);
+	if (WIFEXITED(wstatus))
+	{
+		/* for (int z = 0; z < 4; z++)
+		{
+			if(strchr(args[0], char_array[z])){
+
+			}
+		} */
+		printf("<%d>", WEXITSTATUS(wstatus));
 	}
 }
 
@@ -157,13 +287,44 @@ int main(int argc, char **argv)
 	if (args_info.file_given)
 	{
 
+		char c;
+		char line[PRMTSIZ] = {0};
+		char line2[PRMTSIZ] = {0};
+		unsigned int line_count = 0;
+
 		printf("-f / --ficheiro com o argumento : %s \n", args_info.file_arg);
 
-		abrirFicheiro(args_info.file_arg);
-		listarLinhasDoFicheiro(args_info.file_arg);
+		FILE *fptr = fopen(args_info.file_arg, "r");
+		if (fptr == NULL)
+		{
+			printf("Cannot open file \n");
+			exit(0);
+		}
+
+		while (fgets(line, PRMTSIZ, fptr))
+		{
+			if (line[0] != '\n')
+			{
+				if (line[0] != '#')
+				{
+					// Print each line
+					printf("line[%02d]:%s", ++line_count, line);
+
+					// Add a trailing newline to lines that don't already have one
+					if (line[strlen(line) - 1] != '\n')
+						printf("\n");
+
+					/* strncpy(line2, line,strlen(line)-1);
+					printf("COMANDO ANTES DE EXECUTAR - %s\n", line2); */
+					execute_a_command(line);
+				}
+			}
+		}
+
 		fclose(fptr);
+		return 0;
 	}
- 
+
 	if (args_info.help_given)
 	{
 		printf("NanoShell is a bash that can run:\n ");
@@ -183,7 +344,7 @@ int main(int argc, char **argv)
 		printf("NUMBER OF TRIES: %d\n", args_info.max_arg);
 		if (args_info.max_arg > 0)
 		{
-			
+
 			normal_use_with_max_executions(args_info.max_arg);
 			return 0;
 		}

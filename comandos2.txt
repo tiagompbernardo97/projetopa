@@ -1,4 +1,10 @@
-ls
+ls -a
 
 #px aux
 pwd
+ps ax | wc -l
+ls "a.txt"
+  ps ax | wc -l
+whoami
+date 
+ls comandos.txt comandos2.txt comandos3.txt
