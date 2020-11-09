@@ -114,11 +114,11 @@ jump:
 			if (*ptr == ' ')
 				continue;
 
-			switch (switch_on) // > >> 2> 2>>
+			/* switch (switch_on) // > >> 2> 2>>
 			{
 			default:
 				break;
-			}
+			} */
 
 			if (*ptr == '\n')
 				break;
